@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Consolidator</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="/dist/output.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-100 text-gray-800 min-h-screen">
+    <div class="container mx-auto p-6">
+      <!-- Header -->
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold text-center text-blue-700">Contact Consolidator</h1>
+        <p class="text-center text-sm text-gray-500 mt-2">
+          Import, review, and consolidate your contact data easily
+        </p>
+      </header>
+
+      <!-- Upload Section -->
+      <section class="bg-white rounded-xl shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">1. Import Contacts</h2>
+        <input
+          type="file"
+          id="fileInput"
+          multiple
+          class="block w-full p-2 border border-gray-300 rounded"
+        />
+        <p class="text-sm text-gray-500 mt-2">Supported formats: CSV</p>
+      </section>
+
+      <!-- Speed Dial Navigation -->
+      <div id="speedDial" class="flex justify-center mb-4"></div>
+
+      <!-- Review Section -->
+      <section class="bg-white rounded-xl shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">2. Review Imported Contacts</h2>
+        <div id="review-section" class="space-y-2">
+          <div
+            id="contactList"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
+          ></div>
+          <p class="text-gray-500">No contacts loaded yet.</p>
+        </div>
+      </section>
+
+      <!-- Modal Structure -->
+      <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div id="contactDetails" class="bg-white rounded-xl p-6 max-w-2xl w-full shadow-lg relative">
+          <!-- Close Button -->
+          <button
+            id="closeModal"
+            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            aria-label="Close"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+          <!-- Contact Full Name -->
+          <h2 id="contactFullName" class="text-2xl font-bold mb-4 text-center"></h2>
+
+          <!-- Scrollable Contact Details -->
+          <div
+            id="contactDetailsList"
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto p-4 border-t border-gray-200"
+          >
+            <!-- Contact details will be dynamically inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

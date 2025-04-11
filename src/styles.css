@@ -1,0 +1,30 @@
+/* src/styles.css */
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .contact-card {
+    @apply bg-white shadow-md rounded-lg p-6 mb-4;
+  }
+
+  .contact-name {
+    @apply text-2xl font-semibold text-gray-800;
+  }
+
+  .contact-info {
+    @apply text-sm text-gray-500;
+  }
+
+  .button-approve {
+    @apply bg-green-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-600;
+  }
+
+  .button-reject {
+    @apply bg-red-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-700;
+  }
+
+}
+  
