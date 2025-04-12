@@ -1,0 +1,19 @@
+{
+    "version": 2,
+    "buildCommand": "",
+    "devCommand": "",
+    "outputDirectory": ".",
+    "public": true,
+    "cleanUrls": true,
+    "headers": [
+      {
+        "source": "/app.js",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "text/javascript"
+          }
+        ]
+      }
+    ]
+}

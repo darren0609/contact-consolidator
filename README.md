@@ -48,9 +48,33 @@ http-server
 npm install -g vercel
 ```
 
-2. Deploy to Vercel:
+2. Create a `vercel.json` configuration file in your project root (if not present)
+
+3. Login to Vercel (if not already logged in):
+```bash
+vercel login
+```
+
+4. Deploy to Vercel:
 ```bash
 vercel
+```
+
+5. Follow the interactive prompts:
+   - Select scope (your account)
+   - Confirm project settings
+   - Confirm deployment
+
+6. Your app will be deployed and a URL will be provided
+
+Note: If you encounter any issues, try:
+```bash
+vercel --prod
+```
+
+To update an existing deployment:
+```bash
+vercel --prod
 ```
 
 ### Deploy to Netlify

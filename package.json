@@ -17,7 +17,8 @@
     "lucide": "^0.487.0",
     "papaparse": "^5.5.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "vercel": "^41.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

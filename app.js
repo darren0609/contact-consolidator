@@ -1,4 +1,4 @@
-import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { parsePhoneNumberFromString } from 'https://unpkg.com/libphonenumber-js?module';
 
 // State variables
 let headers = [];
