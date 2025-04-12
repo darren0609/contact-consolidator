@@ -1,88 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Contact Consolidator</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="/dist/output.css" rel="stylesheet" />
-  </head>
-  <body class="bg-gray-100 text-gray-800 min-h-screen">
-    <div class="container mx-auto p-6">
-      <!-- Header -->
-      <header class="mb-8">
-        <h1 class="text-4xl font-bold text-center text-blue-700">Contact Consolidator</h1>
-        <p class="text-center text-sm text-gray-500 mt-2">
-          Import, review, and consolidate your contact data easily
-        </p>
-      </header>
-
-      <!-- Upload Section -->
-      <section class="bg-white rounded-xl shadow p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">1. Import Contacts</h2>
-        <input
-          type="file"
-          id="fileInput"
-          multiple
-          class="block w-full p-2 border border-gray-300 rounded"
-        />
-        <p class="text-sm text-gray-500 mt-2">Supported formats: CSV</p>
-      </section>
-
-      <!-- Speed Dial Navigation -->
-      <div id="speedDial" class="flex justify-center mb-4"></div>
-
-      <!-- Review Section -->
-      <section class="bg-white rounded-xl shadow p-6">
-        <h2 class="text-xl font-semibold mb-4">2. Review Imported Contacts</h2>
-        <div id="review-section" class="space-y-2">
-          <div
-            id="contactList"
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
-          ></div>
-          <p class="text-gray-500">No contacts loaded yet.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Viewer</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      background-color: #0f0f0f;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .sidebar {
+      background-color: #1a1a1a;
+    }
+    .highlight-card {
+      background-color: #2a2a2a;
+    }
+    .bg-red-100 {
+      background-color: rgba(255, 0, 0, 0.2);
+    }
+    #contact-modal {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 40vw;
+      height: 100vh;
+      background-color: #1a1a1a;
+      z-index: 50;
+      overflow-y: auto;
+      padding: 2rem;
+      display: none;
+    }
+    #contact-modal.flex {
+      display: flex;
+      flex-direction: column;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar w-1/5 p-4 flex flex-col h-screen">
+      <!-- Search Bar -->
+      <div class="mb-6 relative">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
         </div>
-      </section>
+        <input 
+          type="text" 
+          id="filterInput" 
+          placeholder="Search contacts..." 
+          class="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded"
+        />
+      </div>
 
-      <!-- Modal Structure -->
-      <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div id="contactDetails" class="bg-white rounded-xl p-6 max-w-2xl w-full shadow-lg relative">
-          <!-- Close Button -->
-          <button
-            id="closeModal"
-            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            aria-label="Close"
+      <!-- Filter Fields -->
+      <div class="mb-4">
+        <select 
+          id="filterField" 
+          class="w-full bg-gray-800 text-white p-2 rounded"
+        >
+          <option value="all">All Fields</option>
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+
+      <!-- Sort Section -->
+      <div class="mb-4">
+        <div class="flex gap-2">
+          <select 
+            id="sortField" 
+            class="flex-1 bg-gray-800 text-white p-2 rounded"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <option value="Last Name">Last Name</option>
+            <option value="First Name">First Name</option>
+            <option value="Company">Company</option>
+          </select>
+          <button 
+            id="sortDirection" 
+            class="bg-gray-800 text-white p-2 rounded hover:bg-gray-700"
+            aria-label="Toggle sort direction"
+          >
+            <i data-lucide="arrow-up"></i>
           </button>
-
-          <!-- Contact Full Name -->
-          <h2 id="contactFullName" class="text-2xl font-bold mb-4 text-center"></h2>
-
-          <!-- Scrollable Contact Details -->
-          <div
-            id="contactDetailsList"
-            class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto p-4 border-t border-gray-200"
-          >
-            <!-- Contact details will be dynamically inserted here -->
-          </div>
         </div>
       </div>
-    </div>
 
-    <script type="module" src="app.js"></script>
-  </body>
+      <!-- Navigation Links -->
+      <nav class="mb-6 space-y-2">
+        <a href="#" class="flex items-center gap-3 p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white">
+          <i data-lucide="users" class="w-5 h-5"></i>
+          <span>All People</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white">
+          <i data-lucide="briefcase" class="w-5 h-5"></i>
+          <span>All Companies</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white">
+          <i data-lucide="star" class="w-5 h-5"></i>
+          <span>Favourites</span>
+        </a>
+      </nav>
+
+      <!-- Duplicates Box -->
+      <div class="mb-6 p-3 bg-gray-800 rounded">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-500"></i>
+            <span class="text-sm">Duplicates Found</span>
+          </div>
+          <span class="text-sm font-bold" id="duplicates-count">0</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-3 mb-6">
+        <button 
+          class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2"
+          onclick="showNewContactModal()"
+        >
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          Add Contact
+        </button>
+
+        <div class="relative">
+          <input 
+            type="file" 
+            id="csvFileInput" 
+            accept=".csv" 
+            class="hidden"
+          />
+          <button 
+            onclick="document.getElementById('csvFileInput').click()" 
+            class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-600 flex items-center justify-center gap-2"
+          >
+            <i data-lucide="upload" class="w-4 h-4"></i>
+            Import CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Spacer -->
+      <div class="flex-grow"></div>
+
+      <!-- Settings Button -->
+      <button 
+        class="w-full p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white flex items-center gap-3"
+        onclick="showSettings()"
+      >
+        <i data-lucide="settings" class="w-5 h-5"></i>
+        <span>Settings</span>
+      </button>
+    </aside>
+
+    <!-- Contact List -->
+    <main class="flex-1 p-6 overflow-auto flex justify-center">
+      <div id="contact-list" class="w-1/2 space-y-4">
+        <!-- Contact cards inserted via JS -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Contact Detail Modal -->
+  <div id="contact-modal" class="hidden">    
+    <div id="modal-content"></div>
+  </div>
+</body>
 </html>

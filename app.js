@@ -1,260 +1,343 @@
-console.log("JS loaded ✅");
-
-import Papa from "https://esm.sh/papaparse";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const fileInput = document.getElementById("fileInput");
+// State variables
+let headers = [];
+let contacts = [];
+let filteredContacts = [];
+let sortDirection = 'asc';
+let currentSortField = 'Last Name';
 
-  if (!fileInput) {
-    console.error("fileInput element not found.");
+// Icon mappings
+const iconMappings = {
+  "First Name": "user",
+  "Last Name": "user",
+  "Email": "mail",
+  "Phone": "phone",
+  "Mobile": "smartphone",
+  "Other": "phone-call",
+  "Company": "briefcase",
+  "Job Title": "badge",
+  "Birthday": "cake",
+  "Notes": "sticky-note",
+  "Home Address": "home",
+  "Work Address": "building",
+  "Home City": "map-pin",
+  "Work City": "map-pin",
+  "Home State": "map",
+  "Work State": "map",
+  "Home ZIP": "hash",
+  "Work ZIP": "hash",
+  "Home Country": "flag",
+  "Work Country": "flag",
+  "Website": "globe",
+  "Social Media": "share-2",
+  "Skype": "video",
+  "LinkedIn": "linkedin",
+  "Twitter": "twitter",
+  "Facebook": "facebook",
+  "Groups": "users",
+  "Category": "folder",
+  "Source": "database",
+  "Created": "calendar",
+  "Modified": "clock",
+  "Custom1": "bookmark",
+  "Custom2": "bookmark",
+  "Custom3": "bookmark"
+};
+
+function resetApp() {
+  headers = [];
+  contacts = [];
+  filteredContacts = [];
+  document.getElementById("contact-list").innerHTML = "";
+  document.getElementById("modal-content").innerHTML = "";
+  document.getElementById("contact-modal").classList.add("hidden");
+  document.getElementById("contact-modal").classList.remove("flex");
+  
+  // Reset filter and sort controls
+  const filterInput = document.getElementById('filterInput');
+  const filterField = document.getElementById('filterField');
+  const sortField = document.getElementById('sortField');
+  if (filterInput) filterInput.value = '';
+  if (filterField) filterField.value = 'all';
+  if (sortField) sortField.value = 'Last Name';
+}
+
+function filterContacts(searchTerm, filterField) {
+  if (!searchTerm) {
+    filteredContacts = [...contacts];
     return;
   }
 
-  fileInput.addEventListener("change", (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    parseCSV(file);
-  });
-});
-
-// Define a flexible mapping object for all fields
-const fieldMappings = {
-  firstName: ["first name", "fname", "first_name"],
-  middleName: ["middle name", "mname", "middle_name"],
-  lastName: ["last name", "lname", "last_name"],
-  email: ["email", "home email", "work email"],
-  phone: ["phone", "mobile", "contact number"],
-  homeAddress: ["home address", "home address1"],
-  workAddress: ["work address", "work address1"],
-  homeCity: ["home city", "home city1"],
-  workCity: ["work city", "work city1"],
-  homeState: ["home state"],
-  workState: ["work state"],
-  homeZip: ["home zip", "home postal code"],
-  workZip: ["work zip", "work postal code"],
-  homeCountry: ["home country"],
-  workCountry: ["work country"],
-  website: ["website", "webpage", "url"]
-};
-
-// Function to normalize and map headers
-function mapFields(headers) {
-  const mappedFields = {};
-
-  headers.forEach((header) => {
-    const normalizedHeader = header.trim().toLowerCase();
-
-    // Find the matching field in the mapping object
-    for (const [field, variations] of Object.entries(fieldMappings)) {
-      if (variations.includes(normalizedHeader)) {
-        mappedFields[field] = header; // Map the original header to the field
-        break;
-      }
+  searchTerm = searchTerm.toLowerCase();
+  filteredContacts = contacts.filter(contact => {
+    if (filterField === 'all') {
+      return Object.values(contact).some(value => 
+        String(value).toLowerCase().includes(searchTerm)
+      );
     }
+    return String(contact[filterField] || '')
+      .toLowerCase()
+      .includes(searchTerm);
   });
-
-  return mappedFields;
 }
 
-function parseCSV(file) {
-  const reader = new FileReader();
-
-  reader.onload = function (event) {
-    const result = event.target.result;
-    const parsed = Papa.parse(result, {
-      header: true,
-      skipEmptyLines: true
-    });
-
-    const parsedData = parsed.data;
-    console.log("Parsed CSV Data:", parsedData);
-
-    // Extract and map fields based on available headers
-    const headers = Object.keys(parsedData[0] || []);
-    const mappedFields = mapFields(headers);
-    console.log("Mapped Fields:", mappedFields);
-
-    displayContacts(parsedData, mappedFields);
-  };
-
-  reader.readAsText(file);
+function sortContacts() {
+  filteredContacts.sort((a, b) => {
+    const valueA = (a[currentSortField] || '').toLowerCase();
+    const valueB = (b[currentSortField] || '').toLowerCase();
+    
+    if (sortDirection === 'asc') {
+      return valueA.localeCompare(valueB);
+    }
+    return valueB.localeCompare(valueA);
+  });
 }
 
-// Function to format phone numbers using libphonenumber-js
+function isUnknown(value) {
+  return !value || /unknown/i.test(value);
+}
+
+function buildAddress(contact) {
+  const addressFields = [
+    "Home Address", "Home City", "Home State", "Home ZIP", "Home Country",
+    "Work Address", "Work City", "Work State", "Work ZIP", "Work Country"
+  ];
+  let address = "";
+  for (let type of ["Home", "Work"]) {
+    const parts = addressFields.filter(f => f.startsWith(type)).map(f => contact[f]).filter(Boolean);
+    if (parts.length) {
+      address = parts.join(", ");
+      break;
+    }
+  }
+  return address;
+}
+
 function formatPhoneNumber(phone) {
   try {
     const phoneNumber = parsePhoneNumberFromString(phone);
     if (phoneNumber && phoneNumber.isValid()) {
-      // Format the number in international format
       return phoneNumber.formatInternational();
     }
   } catch (error) {
     console.error("Error formatting phone number:", error);
   }
-
-  // Return null if the phone number is invalid
   return null;
 }
 
-function displayContacts(parsedData, mappedFields) {
-  const contactList = document.getElementById("contactList");
-  const contactModal = document.getElementById("contactModal");
-  const contactDetails = document.getElementById("contactDetails");
-  const contactFullName = document.getElementById("contactFullName");
-  const contactDetailsList = document.getElementById("contactDetailsList");
-  const closeModalButton = document.getElementById("closeModal");
-  const speedDial = document.getElementById("speedDial");
+function getPhoneNumber(contact) {
+  return contact["Phone"] || contact["Mobile"] || contact["Other"] || "No phone";
+}
 
-  // Ensure the container exists
-  if (!contactList || !contactModal || !contactDetails || !contactFullName || !contactDetailsList || !closeModalButton || !speedDial) {
-    console.error("Missing essential elements");
-    return;
-  }
+function displayContacts() {
+  const container = document.getElementById("contact-list");
+  container.className = "w-full max-w-4xl mx-0 space-y-4";
+  container.innerHTML = "";
 
-  // Clear previous list and speed dial
-  contactList.innerHTML = "";
-  speedDial.innerHTML = "";
+  // Apply filtering and sorting
+  filterContacts(
+    document.getElementById('filterInput').value,
+    document.getElementById('filterField').value
+  );
+  sortContacts();
 
-  // Group contacts alphabetically by the first letter of the last name
-  const groupedContacts = parsedData.reduce((groups, contact) => {
-    const lastName = contact[mappedFields.lastName] || "Unknown Last Name";
-    const firstLetter = lastName.charAt(0).toUpperCase();
-    if (!groups[firstLetter]) groups[firstLetter] = [];
-    groups[firstLetter].push(contact);
-    return groups;
-  }, {});
+  filteredContacts.forEach((contact) => {
+    let hasUnknown = Object.values(contact).some(isUnknown);
+    let bgClass = hasUnknown ? "bg-red-600 hover:bg-red-500" : "bg-gray-700 hover:bg-gray-600";
+    let address = buildAddress(contact);
 
-  // Create speed dial navigation
-  Object.keys(groupedContacts)
-    .sort()
-    .forEach((letter) => {
-      const letterLink = document.createElement("a");
-      letterLink.href = `#group-${letter}`;
-      letterLink.textContent = letter;
-      letterLink.className = "text-blue-500 hover:underline mx-2";
-      speedDial.appendChild(letterLink);
-    });
+    const phone = getPhoneNumber(contact);
+    const formattedPhone = formatPhoneNumber(phone);
+    const isPhoneValid = !!formattedPhone;
 
-  // Display grouped contacts
-  Object.keys(groupedContacts)
-    .sort()
-    .forEach((letter) => {
-      const groupHeader = document.createElement("h2");
-      groupHeader.id = `group-${letter}`;
-      groupHeader.textContent = letter;
-      groupHeader.className = "text-2xl font-bold mt-6 mb-4";
-      contactList.appendChild(groupHeader);
+    const card = document.createElement("div");
+    card.className = `flex items-center justify-between ${bgClass} p-4 rounded shadow text-white transition duration-200`;
 
-      groupedContacts[letter].forEach((contact) => {
-        // Extract fields
-        const firstName = contact[mappedFields.firstName] || "Unknown First Name";
-        const lastName = contact[mappedFields.lastName] || "Unknown Last Name";
-        const phone = contact[mappedFields.phone] || "Unknown Phone";
-        const email = contact[mappedFields.email] || "Unknown Email";
-        const website = contact[mappedFields.website] || "No Website";
+    card.innerHTML = `
+      <div class="flex flex-col min-w-0">
+        <span class="font-semibold text-lg truncate">${contact["First Name"] || "Unnamed"} ${contact["Last Name"] || ""}</span>
+        <span class="text-sm text-gray-300 truncate">${address}</span>
+      </div>
+      <div class="flex flex-col items-end text-sm text-gray-300 whitespace-nowrap mr-4">
+        <span class="${isPhoneValid ? "" : "font-bold text-red-500"}">${isPhoneValid ? formattedPhone : phone}</span>
+        <span>${contact["Email"] || "No email"}</span>
+      </div>
+      <div class="text-gray-400 hover:text-white">
+        <button aria-label="Open contact details">⋮</button>
+      </div>
+    `;
 
-        // Address concatenation logic
-        const homeAddress = contact[mappedFields.homeAddress] || "";
-        const homeCity = contact[mappedFields.homeCity] || "";
-        const homeState = contact[mappedFields.homeState] || "";
-        const homeZip = contact[mappedFields.homeZip] || "";
-        const homeCountry = contact[mappedFields.homeCountry] || "";
-
-        const workAddress = contact[mappedFields.workAddress] || "";
-        const workCity = contact[mappedFields.workCity] || "";
-        const workState = contact[mappedFields.workState] || "";
-        const workZip = contact[mappedFields.workZip] || "";
-        const workCountry = contact[mappedFields.workCountry] || "";
-
-        // Prioritize home address over work address
-        let fullAddress = [homeAddress, homeCity, homeState, homeZip, homeCountry].filter(Boolean).join(", ");
-        if (!fullAddress && workAddress) {
-          fullAddress = [workAddress, workCity, workState, workZip, workCountry].filter(Boolean).join(", ");
-        }
-        if (!fullAddress) fullAddress = "No Address Provided";
-
-        // Background color logic
-        let backgroundClass = "bg-white"; // Default background
-        if ([firstName, lastName, phone, email].includes("Unknown First Name") || [firstName, lastName, phone, email].includes("Unknown Last Name")) {
-          backgroundClass = "bg-red-100"; // Highlight missing critical fields
-        }
-
-        // Format phone number
-        const formattedPhone = formatPhoneNumber(phone);
-        const isPhoneValid = !!formattedPhone;
-
-        // Create a contact card
-        const contactCard = document.createElement("div");
-        contactCard.className = `${backgroundClass} shadow-md rounded-xl p-4 mb-4 flex flex-col gap-2 max-w-md`;
-
-        contactCard.innerHTML = `
-          <h2 class="text-xl font-semibold">${firstName} ${lastName}</h2>
-          <div class="flex items-center gap-2 text-gray-600">
-            <span data-lucide="phone" class="text-brown-500"></span>
-            <span class="${isPhoneValid ? "" : "font-bold text-red-500"}">${isPhoneValid ? formattedPhone : phone}</span>
-            ${
-              !isPhoneValid
-                ? `<button class="ml-2 bg-blue-500 text-white px-2 py-1 rounded text-sm" onclick="editPhone('${phone}')">Edit</button>`
-                : ""
-            }
-          </div>
-          <div class="flex items-center gap-2 text-gray-600">
-            <span data-lucide="mail" class="text-brown-500"></span>
-            <span>${email}</span>
-          </div>
-          <div class="flex items-center gap-2 text-gray-600">
-            <span data-lucide="map-pin" class="text-brown-500"></span>
-            <span>${fullAddress}</span>
-          </div>
-          <div class="flex items-center gap-2 text-gray-600">
-            <span data-lucide="globe" class="text-brown-500"></span>
-            <span>${website}</span>
-          </div>
-        `;
-
-        // Add event listener to show contact details in the modal
-        contactCard.addEventListener("click", () => {
-          contactFullName.innerText = `${firstName} ${lastName}`;
-          contactDetailsList.innerHTML = "";
-
-          Object.keys(contact).forEach((field) => {
-            const fieldName = field || "Unknown Field";
-            const fieldValue = contact[field] || "No Data";
-            const fieldItem = document.createElement("div");
-            fieldItem.innerHTML = `<strong>${fieldName}:</strong> ${fieldValue}`;
-            contactDetailsList.appendChild(fieldItem);
-          });
-
-          contactModal.classList.remove("hidden");
-        });
-
-        // Append the contact card to the list
-        contactList.appendChild(contactCard);
-      });
-    });
-
-  // Close modal logic
-  closeModalButton.addEventListener("click", () => {
-    contactModal.classList.add("hidden");
+    card.addEventListener("click", () => showContactModal(contact));
+    container.appendChild(card);
   });
 
-  contactModal.addEventListener("click", (event) => {
-    if (event.target === contactModal) {
-      contactModal.classList.add("hidden");
-    }
-  });
-
-  // Render icons
+  // Initialize Lucide icons
   lucide.createIcons();
 }
 
-// Function to handle phone number editing
-function editPhone(phone) {
-  const newPhone = prompt("Edit Phone Number:", phone);
-  if (newPhone) {
-    alert(`Phone number updated to: ${newPhone}`);
-    // Logic to update the phone number in the data can be added here
-  }
+function showContactModal(contact) {
+  const modal = document.getElementById("contact-modal");
+  const content = document.getElementById("modal-content");
+  content.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "bg-gray-800 text-white rounded-lg p-6 shadow-md w-[500px] transform transition-all duration-200";
+
+  // Header section with close button
+  const headerHTML = `
+    <div class="flex flex-col space-y-6">
+      <div class="flex items-start space-x-6">
+        <div class="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center">
+          <i data-lucide="user" class="w-12 h-12"></i>
+        </div>
+        <div class="flex-1">
+          <div class="flex justify-between items-start">
+            <h2 class="text-2xl font-bold">${contact["First Name"] || ""} ${contact["Last Name"] || "Unnamed"}</h2>
+            <button 
+              id="modal-close" 
+              class="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700 transition-colors"
+              aria-label="Close modal"
+            >
+              <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-gray-400">
+            <i data-lucide="briefcase" class="w-4 h-4"></i>
+            <span>${contact["Company"] || "(No company)"}</span>
+          </div>
+          <div class="flex items-center gap-2 text-gray-400">
+            <i data-lucide="badge" class="w-4 h-4"></i>
+            <span>${contact["Job Title"] || "(No job title)"}</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+  `;
+
+  // Generate field entries
+  const fieldEntriesHTML = Object.entries(contact)
+    .filter(([key, value]) => {
+      return !["First Name", "Last Name", "Company", "Job Title"].includes(key) && value;
+    })
+    .map(([key, value]) => {
+      const icon = iconMappings[key] || "circle";
+      return `
+        <div class="bg-gray-700 p-4 rounded flex items-center gap-3">
+          <i data-lucide="${icon}" class="w-5 h-5 text-gray-400"></i>
+          <div class="flex flex-col">
+            <span class="text-sm text-gray-400">${key}</span>
+            <span class="text-lg">${value}</span>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  card.innerHTML = `
+    ${headerHTML}
+      ${fieldEntriesHTML}
+    </div>
+  `;
+ 
+  content.appendChild(card);
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  
+  // Add animation after a brief delay
+  setTimeout(() => {
+    card.style.opacity = "1";
+    card.style.transform = "translateX(0)";
+  }, 50);
+
+  // Initialize Lucide icons
+  lucide.createIcons();
 }
+
+// Initialize file input handler
+const fileInput = document.getElementById("csvFileInput");
+if (fileInput) {
+  fileInput.addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const text = event.target.result;
+      const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+      headers = lines[0].split(",").map(h => h.trim());
+      contacts = lines.slice(1).map(line => {
+        const values = line.split(",");
+        const contact = {};
+        headers.forEach((header, index) => {
+          contact[header] = values[index] ? values[index].trim() : "";
+        });
+        return contact;
+      });
+      filteredContacts = [...contacts];
+      
+      // Populate filter fields dropdown
+      const filterField = document.getElementById('filterField');
+      if (filterField && headers.length) {
+        filterField.innerHTML = `
+          <option value="all">All Fields</option>
+          ${headers.map(header => `
+            <option value="${header}">${header}</option>
+          `).join('')}
+        `;
+      }
+      
+      displayContacts();
+    };
+    reader.readAsText(file);
+  });
+}
+
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+  const filterInput = document.getElementById('filterInput');
+  const filterField = document.getElementById('filterField');
+  const sortField = document.getElementById('sortField');
+  const sortDirectionBtn = document.getElementById('sortDirection');
+  
+  // Filter input handlers
+  if (filterInput && filterField) {
+    filterInput.addEventListener('input', () => displayContacts());
+    filterField.addEventListener('change', () => displayContacts());
+  }
+
+  // Sort handlers
+  if (sortField && sortDirectionBtn) {
+    // Sort field change handler
+    sortField.addEventListener('change', (e) => {
+      currentSortField = e.target.value;
+      displayContacts();
+    });
+
+    // Sort direction button handler
+    sortDirectionBtn.addEventListener('click', () => {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      
+      // Clear existing content
+      sortDirectionBtn.innerHTML = '';
+      
+      // Add single icon
+      const icon = document.createElement('i');
+      icon.setAttribute('data-lucide', sortDirection === 'asc' ? 'arrow-up' : 'arrow-down');
+      sortDirectionBtn.appendChild(icon);
+      
+      lucide.createIcons();
+      displayContacts();
+    });
+  }
+});
+
+// Add event delegation for modal close
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#modal-close')) {
+    const modal = document.getElementById("contact-modal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+});
