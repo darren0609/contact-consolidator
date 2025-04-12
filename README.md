@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/677616ac-fe79-40a0-9393-6ff027c51447/deploy-status)](https://app.netlify.com/sites/strong-concha-012add/deploys)
+
 # Contact Consolidator
 
 A modern web application for managing and viewing contact information, with support for CSV import, filtering, and sorting capabilities.
