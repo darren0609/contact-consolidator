@@ -7,164 +7,205 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
+    :root {
+      --sidebar-width: 20%;
+      --sidebar-bg: #111827;
+      --sidebar-border: #1f2937;
+    }
+
     body {
       background-color: #0f0f0f;
       color: white;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
     .sidebar {
-      background-color: #1a1a1a;
+      background-color: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      width: var(--sidebar-width);
+      z-index: 40;
     }
-    .highlight-card {
-      background-color: #2a2a2a;
+
+    #letter-index {
+      background-color: rgba(17, 17, 17, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(75, 85, 99, 0.2);
     }
-    .bg-red-100 {
-      background-color: rgba(255, 0, 0, 0.2);
+
+    #contact-list-container {
+      scrollbar-width: thin;
+      scrollbar-color: #4a5568 #1a202c;
     }
+
+    #contact-list-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #contact-list-container::-webkit-scrollbar-track {
+      background: #1a202c;
+    }
+
+    #contact-list-container::-webkit-scrollbar-thumb {
+      background-color: #4a5568;
+      border-radius: 4px;
+    }
+
     #contact-modal {
       position: fixed;
-      top: 0;
-      right: 0;
-      width: 40vw;
-      height: 100vh;
-      background-color: #1a1a1a;
+      top: 50%;
+      right: 2rem;
+      transform: translateY(-50%);
       z-index: 50;
-      overflow-y: auto;
-      padding: 2rem;
       display: none;
     }
+
     #contact-modal.flex {
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
+
     .hidden {
       display: none;
     }
   </style>
   <script type="module" src="/app.js"></script>
 </head>
-<body>
-  <div class="flex min-h-screen">
-    <!-- Sidebar -->
-    <aside class="sidebar w-1/5 p-4 flex flex-col h-screen">
-      <!-- Search Bar -->
-      <div class="mb-6 relative">
-        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
-        </div>
-        <input 
-          type="text" 
-          id="filterInput" 
-          placeholder="Search contacts..." 
-          class="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded"
-        />
-      </div>
-
-      <!-- Filter Fields -->
-      <div class="mb-4">
-        <select 
-          id="filterField" 
-          class="w-full bg-gray-800 text-white p-2 rounded"
-        >
-          <option value="all">All Fields</option>
-          <!-- Options will be populated dynamically -->
-        </select>
-      </div>
-
-      <!-- Sort Section -->
-      <div class="mb-4">
-        <div class="flex gap-2">
-          <select 
-            id="sortField" 
-            class="flex-1 bg-gray-800 text-white p-2 rounded"
-          >
-            <option value="Last Name">Last Name</option>
-            <option value="First Name">First Name</option>
-            <option value="Company">Company</option>
-          </select>
-          <button 
-            id="sortDirection" 
-            class="bg-gray-800 text-white p-2 rounded hover:bg-gray-700"
-            aria-label="Toggle sort direction"
-          >
-            <i data-lucide="arrow-up"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Navigation Links -->
-      <nav class="mb-6 space-y-2">
-        <a href="#" class="flex items-center gap-3 p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white">
-          <i data-lucide="users" class="w-5 h-5"></i>
-          <span>All People</span>
-        </a>
-        <a href="#" class="flex items-center gap-3 p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white">
-          <i data-lucide="briefcase" class="w-5 h-5"></i>
-          <span>All Companies</span>
-        </a>
-        <a href="#" class="flex items-center gap-3 p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white">
-          <i data-lucide="star" class="w-5 h-5"></i>
-          <span>Favourites</span>
-        </a>
-      </nav>
-
-      <!-- Duplicates Box -->
-      <div class="mb-6 p-3 bg-gray-800 rounded">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-500"></i>
-            <span class="text-sm">Duplicates Found</span>
+<body class="overflow-hidden">
+  <div class="flex h-screen">
+    <!-- Fixed Sidebar -->
+    <aside class="sidebar fixed left-0 h-full flex flex-col">
+      <!-- Sidebar Header -->
+      <div class="p-4 border-b border-gray-800">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <i data-lucide="users" class="w-6 h-6 text-white"></i>
           </div>
-          <span class="text-sm font-bold" id="duplicates-count">0</span>
+          <div class="flex-1">
+            <h1 class="text-lg font-semibold text-white">Contacts</h1>
+            <p class="text-sm text-gray-400">Manage your contacts</p>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+          </div>
+          <input 
+            type="text" 
+            id="filterInput" 
+            placeholder="Search contacts..." 
+            class="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg"
+          />
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="space-y-3 mb-6">
-        <button 
-          class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2"
-          onclick="showNewContactModal()"
-        >
-          <i data-lucide="plus" class="w-4 h-4"></i>
-          Add Contact
-        </button>
+      <!-- Sidebar Body -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-6">
+        <!-- Filter and Sort -->
+        <div class="space-y-4">
+          <select 
+            id="filterField" 
+            class="w-full bg-gray-800 text-white p-2 rounded-lg"
+          >
+            <option value="all">All Fields</option>
+          </select>
 
-        <div class="relative">
-          <input 
-            type="file" 
-            id="csvFileInput" 
-            accept=".csv" 
-            class="hidden"
-          />
+          <div class="flex gap-2">
+            <select 
+              id="sortField" 
+              class="flex-1 bg-gray-800 text-white p-2 rounded-lg"
+            >
+              <option value="Last Name">Last Name</option>
+              <option value="First Name">First Name</option>
+              <option value="Company">Company</option>
+            </select>
+            <button 
+              id="sortDirection" 
+              class="bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-700"
+              aria-label="Toggle sort direction"
+            >
+              <i data-lucide="arrow-up"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="space-y-1">
+          <a href="#" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white group">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span>All People</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white group">
+            <i data-lucide="briefcase" class="w-5 h-5"></i>
+            <span>Companies</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white group">
+            <i data-lucide="star" class="w-5 h-5"></i>
+            <span>Favorites</span>
+          </a>
+        </nav>
+
+        <!-- Duplicates Box -->
+        <div class="p-3 bg-yellow-500/10 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-500"></i>
+              <span class="text-sm text-yellow-500">Duplicates Found</span>
+            </div>
+            <span class="text-sm font-bold text-yellow-500" id="duplicates-count">0</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="space-y-3">
+          <button 
+            class="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition-colors"
+            onclick="showNewContactModal()"
+          >
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Add Contact</span>
+          </button>
+          <input type="file" id="csvFileInput" accept=".csv" class="hidden" />
           <button 
             onclick="document.getElementById('csvFileInput').click()" 
-            class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-600 flex items-center justify-center gap-2"
+            class="w-full bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors"
           >
             <i data-lucide="upload" class="w-4 h-4"></i>
-            Import CSV
+            <span>Import CSV</span>
           </button>
         </div>
       </div>
 
-      <!-- Spacer -->
-      <div class="flex-grow"></div>
-
-      <!-- Settings Button -->
-      <button 
-        class="w-full p-2 rounded hover:bg-gray-800 text-gray-300 hover:text-white flex items-center gap-3"
-        onclick="showSettings()"
-      >
-        <i data-lucide="settings" class="w-5 h-5"></i>
-        <span>Settings</span>
-      </button>
+      <!-- Sidebar Footer -->
+      <div class="p-4 border-t border-gray-800">
+        <button 
+          class="w-full p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white flex items-center gap-3 transition-colors"
+          onclick="showSettings()"
+        >
+          <i data-lucide="settings" class="w-5 h-5"></i>
+          <span>Settings</span>
+        </button>
+      </div>
     </aside>
 
-    <!-- Contact List -->
-    <main class="flex-1 p-6 overflow-auto flex justify-center">
-      <div id="contact-list" class="w-1/2 space-y-4">
-        <!-- Contact cards inserted via JS -->
-      </div>
-    </main>
+    <!-- Main Content Area -->
+    <div class="ml-[20%] flex-1 h-screen">
+      <main class="flex flex-col h-full">
+        <!-- Fixed Letter Index -->
+        <div id="letter-index" class="sticky top-0 bg-gray-900 py-2 z-10 flex gap-2 justify-start pl-6">
+          <!-- Letters will be inserted here -->
+        </div>
+
+        <!-- Scrollable Contact List -->
+        <div class="overflow-y-auto flex-1" id="contact-list-container">
+          <div class="pl-6">
+            <div id="contact-list" class="w-1/2 space-y-6">
+              <!-- Contact groups will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
   </div>
 
   <!-- Contact Detail Modal -->

@@ -132,8 +132,10 @@ function getPhoneNumber(contact) {
 
 function displayContacts() {
   const container = document.getElementById("contact-list");
-  container.className = "w-full max-w-4xl mx-0 space-y-4";
+  const letterIndex = document.getElementById("letter-index");
+  container.className = "space-y-6";
   container.innerHTML = "";
+  letterIndex.innerHTML = "";
 
   // Apply filtering and sorting
   filterContacts(
@@ -142,34 +144,80 @@ function displayContacts() {
   );
   sortContacts();
 
-  filteredContacts.forEach((contact) => {
-    let hasUnknown = Object.values(contact).some(isUnknown);
-    let bgClass = hasUnknown ? "bg-red-600 hover:bg-red-500" : "bg-gray-700 hover:bg-gray-600";
-    let address = buildAddress(contact);
+  // Group contacts by first letter
+  const groupedContacts = filteredContacts.reduce((groups, contact) => {
+    const name = `${contact["First Name"]} ${contact["Last Name"]}`.trim();
+    const letter = (name ? name[0] : '#').toUpperCase();
+    if (!groups[letter]) {
+      groups[letter] = [];
+    }
+    groups[letter].push(contact);
+    return groups;
+  }, {});
 
-    const phone = getPhoneNumber(contact);
-    const formattedPhone = formatPhoneNumber(phone);
-    const isPhoneValid = !!formattedPhone;
+  // Create letter index
+  const letters = Object.keys(groupedContacts).sort();
+  letters.forEach(letter => {
+    const button = document.createElement('button');
+    button.className = 'px-3 py-1 rounded hover:bg-gray-700 text-gray-300 hover:text-white transition-colors';
+    button.textContent = letter;
+    button.addEventListener('click', () => {
+      document.getElementById(`group-${letter}`).scrollIntoView({ behavior: 'smooth' });
+    });
+    letterIndex.appendChild(button);
+  });
 
-    const card = document.createElement("div");
-    card.className = `flex items-center justify-between ${bgClass} p-4 rounded shadow text-white transition duration-200`;
+  // Create contact groups
+  letters.forEach(letter => {
+    const groupDiv = document.createElement('div');
+    groupDiv.id = `group-${letter}`;
+    groupDiv.className = 'space-y-2';
 
-    card.innerHTML = `
-      <div class="flex flex-col min-w-0">
-        <span class="font-semibold text-lg truncate">${contact["First Name"] || "Unnamed"} ${contact["Last Name"] || ""}</span>
-        <span class="text-sm text-gray-300 truncate">${address}</span>
-      </div>
-      <div class="flex flex-col items-end text-sm text-gray-300 whitespace-nowrap mr-4">
-        <span class="${isPhoneValid ? "" : "font-bold text-red-500"}">${isPhoneValid ? formattedPhone : phone}</span>
-        <span>${contact["Email"] || "No email"}</span>
-      </div>
-      <div class="text-gray-400 hover:text-white">
-        <button aria-label="Open contact details">⋮</button>
-      </div>
-    `;
+    // Add letter header
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'text-lg font-semibold text-gray-400 sticky top-12 bg-gray-900 py-2';
+    headerDiv.textContent = letter;
+    groupDiv.appendChild(headerDiv);
 
-    card.addEventListener("click", () => showContactModal(contact));
-    container.appendChild(card);
+    // Add contacts in this group
+    groupedContacts[letter].forEach(contact => {
+      const card = document.createElement("div");
+      card.className = "bg-gray-700 p-4 rounded shadow text-white transition duration-200 hover:bg-gray-600";
+
+      card.innerHTML = `
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <i data-lucide="user" class="w-6 h-6 text-gray-400"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-baseline">
+              <h3 class="font-semibold text-lg truncate">
+                ${contact["First Name"] || ""} ${contact["Last Name"] || "Unnamed"}
+              </h3>
+              <div class="text-sm text-gray-300 text-right">
+                ${formatPhoneNumber(contact["Phone"] || contact["Mobile"]) || "(No phone)"}
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline mt-1">
+              <div class="text-sm text-gray-300 truncate">
+                ${contact["Company"] || "(No company)"}
+              </div>
+              <div class="text-sm text-gray-300 text-right">
+                ${contact["Email"] || "(No email)"}
+              </div>
+            </div>
+            <div class="text-sm text-gray-400 truncate mt-1">
+              ${contact["Job Title"] || "(No job title)"}
+            </div>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => showContactModal(contact));
+      groupDiv.appendChild(card);
+    });
+
+    container.appendChild(groupDiv);
   });
 
   // Initialize Lucide icons
