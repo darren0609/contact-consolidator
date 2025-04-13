@@ -26,7 +26,7 @@ A modern web application for managing and viewing contact information, with supp
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/contact-consolidator.git
+git clone https://github.com/darren0609/contact-consolidator.git
 cd contact-consolidator
 ```
 
