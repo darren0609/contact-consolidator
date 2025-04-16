@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Search, 
   Users, 
@@ -10,101 +10,124 @@ import {
   Plus,
   AlertTriangle
 } from 'lucide-react';
+import { SpeedDial, SpeedDialIcon } from '../SpeedDial/SpeedDial';
+import { SourceLegend } from '../SourceIndicator';
+import SearchBar from '../SearchBar';
 
 export default function Sidebar({ 
   onSearch, 
-  onFilterChange,
-  onImportCsv,
-  duplicatesCount = 0 
+  onImportCsv, 
+  duplicateCount = 0,
+  onToggleDuplicates,
+  showDuplicates
 }) {
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleImport = async (event) => {
+    try {
+      setIsImporting(true);
+      await onImportCsv(event);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
-    <aside className="fixed left-0 w-1/5 h-full flex flex-col bg-sidebar-bg border-r border-sidebar-border">
+    <aside className="h-full w-64 flex flex-col bg-gray-800 border-r border-gray-700">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-gray-800">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Users className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-white">Contacts</h1>
+              <p className="text-sm text-gray-400">Manage your contacts</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold text-white">Contacts</h1>
-            <p className="text-sm text-gray-400">Manage your contacts</p>
+          
+          {/* Source Legend - Now in top right */}
+          <div className="flex-shrink-0">
+            <SourceLegend />
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input 
-            type="text"
-            placeholder="Search contacts..."
-            onChange={(e) => onSearch(e.target.value)}
-            className="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg"
+        <div className="p-4">
+          <SearchBar 
+            value={searchTerm} 
+            onChange={(value) => {
+              setSearchTerm(value);
+              onSearch(value);
+            }}
           />
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="p-4 space-y-1">
-        <a href="#" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white">
-          <Users className="w-5 h-5" />
-          <span>All People</span>
-        </a>
-        <a href="#" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white">
-          <Briefcase className="w-5 h-5" />
-          <span>Companies</span>
-        </a>
-        <a href="#" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white">
-          <Star className="w-5 h-5" />
-          <span>Favorites</span>
-        </a>
-      </nav>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Navigation */}
+        <nav className="p-4 space-y-1">
+          <a href="#" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+            <Users className="w-5 h-5" />
+            <span>All Contacts</span>
+          </a>
 
-      {/* Actions */}
-      <div className="p-4 space-y-4">
-        {/* Duplicates Box */}
-        {duplicatesCount > 0 && (
-          <div className="flex items-center gap-2 text-yellow-500 bg-yellow-500/10 p-3 rounded-lg">
-            <AlertTriangle className="w-5 h-5" />
-            <span>{duplicatesCount} possible duplicate{duplicatesCount === 1 ? '' : 's'}</span>
-          </div>
-        )}
-
-        {/* Buttons */}
-        <div className="space-y-3">
-          <button 
-            className="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-            onClick={() => {/* TODO: Add new contact */}}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Contact</span>
-          </button>
-
-          <input 
-            type="file" 
-            id="csvFileInput" 
-            accept=".csv" 
-            className="hidden" 
-            onChange={onImportCsv}
-          />
-          <button 
-            onClick={() => document.getElementById('csvFileInput').click()}
-            className="w-full bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-700 flex items-center justify-center gap-2"
-          >
-            <Upload className="w-4 h-4" />
-            <span>Import CSV</span>
-          </button>
-        </div>
+          {duplicateCount > 0 && (
+            <button
+              onClick={onToggleDuplicates}
+              className={`flex items-center justify-between w-full p-2 rounded-lg 
+                        transition-colors ${showDuplicates 
+                          ? 'bg-blue-600 text-white' 
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+            >
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5" />
+                <span>Potential Duplicates</span>
+              </div>
+              <span className="bg-gray-700 text-white px-2 py-1 rounded-full text-xs">
+                {duplicateCount}
+              </span>
+            </button>
+          )}
+        </nav>
       </div>
 
-      {/* Sidebar Footer */}
-      <div className="mt-auto p-4 border-t border-gray-800">
-        <button 
-          className="w-full p-2 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white flex items-center gap-3"
-          onClick={() => {/* TODO: Show settings */}}
-        >
-          <Settings className="w-5 h-5" />
-          <span>Settings</span>
-        </button>
+      {/* Action Menu at bottom */}
+      <div className="flex-shrink-0 border-t border-gray-700 p-4">
+        <SpeedDial>
+          <SpeedDialIcon 
+            onClick={() => {/* TODO: Add new contact */}} 
+            icon="plus" 
+            label="New Contact" 
+          />
+          <SpeedDialIcon 
+            onClick={() => document.getElementById('csvFileInput').click()} 
+            icon="upload" 
+            label={isImporting ? "Importing..." : "Import"}
+            disabled={isImporting}
+          />
+          <SpeedDialIcon 
+            onClick={() => {/* TODO: Export */}} 
+            icon="download" 
+            label="Export" 
+          />
+          <SpeedDialIcon 
+            onClick={() => {/* TODO: Settings */}} 
+            icon="settings" 
+            label="Settings" 
+          />
+        </SpeedDial>
+        <input 
+          type="file" 
+          id="csvFileInput" 
+          accept=".csv" 
+          className="hidden" 
+          onChange={handleImport}
+          disabled={isImporting}
+        />
       </div>
     </aside>
   );

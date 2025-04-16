@@ -3,6 +3,12 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    postcss: './postcss.config.js'
+  },
+  optimizeDeps: {
+    exclude: ['better-sqlite3']
+  },
   server: {
     port: 3000
   }
