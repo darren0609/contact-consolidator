@@ -1,215 +1,143 @@
 # Contact Consolidator
 
-A modern contact management system built with React and SQLite that helps you maintain a clean contact database by detecting and managing duplicate entries. The application provides an intuitive interface for viewing, merging, and managing contacts with features like duplicate detection, contact merging, and comprehensive contact history.
+A modern contact management system built with React and SQLite that helps you maintain a clean contact database by detecting and managing duplicate entries. The application provides an intuitive interface for viewing, merging, and managing contacts.
 
-## Features & Progress
+---
 
-### ✅ Completed Features
+## ✅ Features & Progress
 
-#### Contact List View
-- Two-column grid layout
-- Contact cards with icons
-- Basic contact details display
-- Source indicators
+### 🔹 Contact List
+- Contact cards with responsive layout
+- Sidebar navigation (A-Z speed dial)
+- Icons for phone, email, and address
+- Unknown contact highlighting
 
-#### Navigation
-- A-Z speed dial
-- Smooth scroll to letter groups
-- Sidebar navigation
-- Search functionality
-
-#### Duplicate Management
+### 🔹 Duplicate Management
 - Duplicate detection algorithm
 - Side-by-side comparison
-- Merge capability
-- Dismiss duplicates option
-- Split view toggle
+- Merge with field-level selection ✅
+- Modal merge interface ✅
+- Merge history tracking ✅
+- Dismiss matches
 
-#### Contact Details
-- Modal view with full details
-- Icons for different field types
-- Phone number formatting
-- Source indication
-- Grid layout for fields
+### 🔹 Data Import / Export
+- CSV import with flexible field mapping ✅
+- Import deduplication logic
+- [ ] CSV export functionality
 
-#### Data Management
-- CSV import functionality
-- Loading states
-- Error handling
-- Basic data validation
-
-### 🚧 In Progress
-
-#### Merge History
-- [x] Database schema created
-- [x] API endpoints defined
-- [x] API endpoints implemented
-- [x] Basic UI implemented
-- [ ] Testing and refinement
-- [ ] Historical data visualization
-
-### 📋 Planned Features
-
-#### Contact Details Enhancement
-- [ ] Edit capability
-- [ ] Field validation
+### 🔹 Contact Details & Management
+- Full contact modal with all fields ✅
+- Address formatting & fallback display ✅
+- [ ] Edit contact modal
+- [ ] Add notes or tags
 - [ ] Custom fields support
-- [ ] Contact groups/tags
-- [ ] Notes/comments system
 
-#### Data Export
-- [ ] CSV export
-- [ ] Export format selection
+### 🔹 Merge History
+- Database schema ✅
+- API implementation ✅
+- [ ] UI component for merge log display
+- [ ] Visual merge trail view
+
+---
+
+## 🧩 Planned Features (Suggested Next)
+
+### 🧪 Data Quality & Rules
+- [ ] Highlight incomplete or inconsistent contacts
+- [ ] Suggestions for fill-ins (e.g. known domains)
+
+### 📤 Data Export
+- [ ] CSV export with field selection
 - [ ] Export history
-- [ ] Selective field export
+- [ ] JSON format support
 
-#### Advanced Search
-- [ ] Filter by fields
-- [ ] Sort options
-- [ ] Save searches
-- [ ] Advanced query builder
+### 🔍 Search & Filters
+- [ ] Advanced filter: by name, company, missing data
+- [ ] Sort options: recently modified, alphabetically
+- [ ] Save search presets
 
-#### User Preferences
-- [ ] Display settings
-- [ ] Default view options
-- [ ] Theme customization
-- [ ] Column customization
+### ⚙️ User Preferences
+- [ ] Theme toggle (light/dark)
+- [ ] Default view setting (list vs grouped)
+- [ ] Group by source file
 
-## Getting Started
+---
+
+## 🛠 Getting Started
 
 ### Prerequisites
-- Node.js 18.x or higher
-- npm 9.x or higher
-- SQLite 3.x
+- Node.js 18+
+- npm 9+
+- SQLite 3+
 
-### Installation
+### Install & Run
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/contact-consolidator.git
 cd contact-consolidator
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Create the SQLite database:
-```bash
 npm run init-db
-```
-
-4. Start the development server:
-```bash
 npm run dev:all
 ```
 
-The application will be available at `http://localhost:5173`
+App will run at: `http://localhost:5173`
 
-## Development
+---
 
-### Project Structure
+## 🧱 Project Structure
+
 ```
 contact-consolidator/
 ├── src/
-│   ├── client/         # React frontend code
-│   ├── server/         # Express backend code
-│   └── shared/         # Shared types and utilities
-├── public/            # Static assets
-└── database/          # SQLite database files
+│   ├── client/       # React UI
+│   ├── server/       # Express + SQLite API
+│   └── shared/       # Utilities/types
+├── database/         # SQLite data
+├── public/           # Static assets
+└── README.md
 ```
 
-### Available Scripts
-- `npm run dev:all` - Start both frontend and backend in development mode
-- `npm run dev:frontend` - Start only the frontend
-- `npm run dev:backend` - Start only the backend
-- `npm run build` - Build the production version
-- `npm run test` - Run tests
-- `npm run init-db` - Initialize/reset the database
+---
 
-### Environment Variables
-Create a `.env` file in the root directory:
-```
-DATABASE_PATH=./database/contacts.db
-PORT=3001
-NODE_ENV=development
-```
+## 🔧 Available Scripts
 
-## Deployment
+- `npm run dev:all` — start frontend + backend
+- `npm run dev:frontend` — start frontend only
+- `npm run dev:backend` — start backend only
+- `npm run init-db` — initialize/reset DB
+- `npm run build` — production build
 
-### Vercel Deployment
+---
 
-1. Install Vercel CLI:
+## 🧪 Deployment
+
+### Vercel
+
 ```bash
 npm install -g vercel
-```
-
-2. Configure your project:
-```bash
 vercel init
+vercel --prod
 ```
 
-3. Update `vercel.json`:
-````json
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    },
-    {
-      "src": "src/server/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "src/server/index.js" },
-    { "src": "/(.*)", "dest": "/dist/$1" }
-  ]
-}
-````
+### Netlify
 
-4. Deploy:
-````bash
-vercel --prod
-````
-
-### Netlify Deployment
-
-1. Create netlify.toml:
-
-````yaml
-
-[build]
-  command = "npm run build"
-  publish = "dist"
-  functions = "functions"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-
-  ````
-
-  2. Deploy via Netlify CLI:
-
-````bash
+```bash
 npm install -g netlify-cli
 netlify init
 netlify deploy --prod
-````
+```
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create your feature branch: git checkout -b feature/amazing-feature
-3. Commit your changes: git commit -m 'Add amazing feature'
-4. Push to the branch: git push origin feature/amazing-feature
-5. Open a Pull Request
+## 🤝 Contributing
 
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+1. Fork the repo
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit: `git commit -m "Add feature"`
+4. Push: `git push origin feature/your-feature`
+5. Open a PR
+
+---
+
+## 📄 License
+MIT — see [LICENSE](./LICENSE)
